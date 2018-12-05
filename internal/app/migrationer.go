@@ -1,13 +1,18 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 
+	"os"
+
+	_ "github.com/lib/pq"
 	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/app/database"
 )
 
 type Migrationer interface {
@@ -49,7 +54,7 @@ func (m *Migration) Exec(status string) {
 
 			if err != nil {
 				fmt.Println("migration failed please fix your file ", err)
-				break
+				return
 			}
 			migrations = append(migrations, Migration{
 				key:          key,
@@ -61,6 +66,27 @@ func (m *Migration) Exec(status string) {
 		sort.SliceStable(migrations, func(i, j int) bool {
 			return migrations[i].unixNanoTime < migrations[j].unixNanoTime
 		})
+
+		// fmt.Println(migrations)
+
+		if constant.CONNDB == "" {
+			fmt.Println("please configure connection first ...")
+			return
+		}
+
+		conn, err := sql.Open("postgres", os.Getenv(constant.CONNDB))
+
+		if err != nil {
+			fmt.Println("failed make connection to DB please configure right connection")
+			return
+		}
+		db := database.NewDB(conn)
+
+		err = db.Exec(constant.MigrationTablePG)
+
+		if err != nil {
+			fmt.Println("Failed craete migrations table ", err)
+		}
 
 		// fmt.Println(migrations)
 	} else if status == constant.StatusDown {

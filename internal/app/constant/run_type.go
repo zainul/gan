@@ -5,4 +5,6 @@ const (
 	Migrate  = "migrate"
 	Seed     = "seed"
 	Rollback = "rollback"
+	SetDir   = "set_dir"
+	SetDB    = "set_db"
 )

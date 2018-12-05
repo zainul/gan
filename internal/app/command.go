@@ -14,13 +14,44 @@ import (
 type MigrationCommand interface {
 	CreateFile(name string, extention string, fileType string) error
 	Migrate(status string)
+	SetMigrationDirectory(dir string)
+	SetConnectionString(conn string)
 }
 
-type storeMigration struct{}
+type storeMigration struct {
+	dir  string `json:"dir"`
+	conn string `json:"conn"`
+}
 
 // NewMigration ..
-func NewMigration() MigrationCommand {
-	return &storeMigration{}
+func NewMigration(dir string, conn string) MigrationCommand {
+	os.Setenv(constant.CONNDB, conn)
+	return &storeMigration{dir, conn}
+}
+
+// SetMigrationDirectory ...
+func (s *storeMigration) SetMigrationDirectory(dir string) {
+	// if dir != "" {
+	// 	err := os.Setenv(constant.DIR, dir)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+	// }
+	// fmt.Println("migration directory has been set to ", dir)
+}
+
+// SetConnectionString ...
+func (s *storeMigration) SetConnectionString(conn string) {
+	// if conn != "" {
+
+	// 	err := os.Setenv(constant.CONNDB, conn)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+	// }
+	// fmt.Println("connection setting already set ", s.conn)
 }
 
 func (s *storeMigration) Migrate(status string) {
@@ -37,26 +68,25 @@ func (s *storeMigration) Migrate(status string) {
 		s.CreateFile("main", constant.DotGo, constant.FileTypeMigrationUp)
 	}
 
-	dir := os.Getenv("GANDIR")
 	// 2. make build by cmd
-	changeDirectory(dir)
+	changeDirectory(s.dir)
 	cmd := exec.Command("go", "build", "-o", "ganrun")
 
 	if _, err := cmd.CombinedOutput(); err != nil {
 		// TODO: make remove temp binary
-		deleteTempFile(dir, "main.go")
-		deleteTempFile(dir, "ganrun")
+		deleteTempFile(s.dir, "main.go")
+		deleteTempFile(s.dir, "ganrun")
 		os.Exit(2)
 	}
 
 	// 3. run the binary
-	changeDirectory(dir)
+	changeDirectory(s.dir)
 	cmd = exec.Command("./ganrun")
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// TODO: make remove temp binary
-		deleteTempFile(dir, "main.go")
-		deleteTempFile(dir, "ganrun")
+		deleteTempFile(s.dir, "main.go")
+		deleteTempFile(s.dir, "ganrun")
 		os.Exit(2)
 	} else {
 		fmt.Println("========================================================")
@@ -67,8 +97,8 @@ func (s *storeMigration) Migrate(status string) {
 	}
 
 	// 4. delete the binary and main.go
-	deleteTempFile(dir, "main.go")
-	deleteTempFile(dir, "ganrun")
+	deleteTempFile(s.dir, "main.go")
+	deleteTempFile(s.dir, "ganrun")
 	fmt.Println("Gan Migration success ...  !!!")
 	os.Exit(2)
 
@@ -92,7 +122,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
 	sourceFilename := fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, fileType)
-	destinationFilename := fmt.Sprintf("%v/%v.%v", os.Getenv("GANDIR"), name, extention)
+	destinationFilename := fmt.Sprintf("%v/%v.%v", s.dir, name, extention)
 
 	// detect if file exists
 	var _, err = os.Stat(destinationFilename)

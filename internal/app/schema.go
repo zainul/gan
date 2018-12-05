@@ -11,4 +11,5 @@ type Schema struct {
 	Down        bool       `json:"down"`
 	ExecuteUp   *time.Time `json:"execute_up"`
 	ExecuteDown *time.Time `json:"execute_down"`
+	Statement   string
 }
