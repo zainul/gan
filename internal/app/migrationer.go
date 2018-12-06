@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"os"
 
@@ -86,6 +87,34 @@ func (m *Migration) Exec(status string) {
 
 		if err != nil {
 			fmt.Println("Failed craete migrations table ", err)
+		}
+
+		for _, val := range migrations {
+
+			err = db.GetByMigrationKey(val.key)
+
+			if err != nil {
+				fmt.Println("get migration by key => ", err)
+				continue
+			}
+
+			err = db.Exec(val.sql)
+			now := time.Now()
+			sch := database.Schema{
+				Up:        true,
+				ExecuteUp: &now,
+				Migration: val.key,
+				Statement: val.sql,
+			}
+
+			if err != nil {
+				fmt.Println("Failed to execute the migration ", err)
+				os.Exit(2)
+			}
+
+			if err = db.Save(sch); err != nil {
+				fmt.Println("error when create history migrations  ", err)
+			}
 		}
 
 		// fmt.Println(migrations)
