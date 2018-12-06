@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"text/template"
 
+	"github.com/zainul/gan/internal/app/io"
+
 	"github.com/zainul/gan/internal/app/constant"
 )
 
@@ -14,8 +16,6 @@ import (
 type MigrationCommand interface {
 	CreateFile(name string, extention string, fileType string) error
 	Migrate(status string)
-	SetMigrationDirectory(dir string)
-	SetConnectionString(conn string)
 }
 
 type storeMigration struct {
@@ -26,32 +26,8 @@ type storeMigration struct {
 // NewMigration ..
 func NewMigration(dir string, conn string) MigrationCommand {
 	os.Setenv(constant.CONNDB, conn)
+	os.Setenv(constant.DIR, dir)
 	return &storeMigration{dir, conn}
-}
-
-// SetMigrationDirectory ...
-func (s *storeMigration) SetMigrationDirectory(dir string) {
-	// if dir != "" {
-	// 	err := os.Setenv(constant.DIR, dir)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		return
-	// 	}
-	// }
-	// fmt.Println("migration directory has been set to ", dir)
-}
-
-// SetConnectionString ...
-func (s *storeMigration) SetConnectionString(conn string) {
-	// if conn != "" {
-
-	// 	err := os.Setenv(constant.CONNDB, conn)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		return
-	// 	}
-	// }
-	// fmt.Println("connection setting already set ", s.conn)
 }
 
 func (s *storeMigration) Migrate(status string) {
@@ -150,15 +126,8 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			fmt.Println("failed creating the file ", err)
 		}
 
-		file, err := os.Create(destinationFilename)
 		tplStr := tpl.String()
-
-		_, err = file.Write([]byte(tplStr))
-
-		if err != nil {
-			fmt.Println("failed write content to the file ", err)
-		}
-		file.Close()
+		io.WriteFile(destinationFilename, tplStr)
 	}
 
 	fmt.Println("done creating file ")

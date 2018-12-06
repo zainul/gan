@@ -76,7 +76,9 @@ func (s *store) Save(schema Schema) (err error) {
 	// migration, up, down, execute_up, execute_down, statements
 	_, err = stmt.Exec(schema.Migration, schema.Up, schema.Down, schema.ExecuteUp, schema.ExecuteDown, schema.Statement)
 
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	err = stmt.Close()
 

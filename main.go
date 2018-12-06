@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/zainul/gan/internal/app"
 	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/app/io"
 )
 
 type Config struct {
@@ -39,11 +39,17 @@ func main() {
 		switch c.Args().Get(0) {
 		case constant.Migrate:
 			mig.Migrate(constant.StatusUp)
-		case constant.SetDB:
-			mig.SetConnectionString(c.Args().Get(1))
-		case constant.SetDir:
-			mig.SetMigrationDirectory(c.Args().Get(1))
 		case constant.Seed:
+		case constant.CreateFromFile:
+			mig.CreateFile(
+				fmt.Sprintf("%v_%v_%v",
+					c.Args().Get(1),
+					time.Now().Format("20060102_150405"),
+					time.Now().UnixNano(),
+				),
+				constant.DotGo,
+				constant.FileTypeMigrationFromFile,
+			)
 		case constant.Create:
 			mig.CreateFile(
 				fmt.Sprintf("%v_%v_%v",
@@ -67,21 +73,13 @@ func main() {
 }
 
 func openFile(config string) Config {
-	jsonFile, err := os.Open(config)
+	byteJSON, err := io.OpenFile(config)
 
 	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("Successfully Opened config file ")
-
-	byteJSON, err := ioutil.ReadAll(jsonFile)
-
-	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Failed to open file ", err)
 		os.Exit(2)
 	}
 
-	defer jsonFile.Close()
 	cfg := Config{}
 
 	err = json.Unmarshal(byteJSON, &cfg)

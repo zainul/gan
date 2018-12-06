@@ -14,6 +14,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/zainul/gan/internal/app/constant"
 	"github.com/zainul/gan/internal/app/database"
+	"github.com/zainul/gan/internal/app/io"
 )
 
 type Migrationer interface {
@@ -132,6 +133,17 @@ func splitterTimeFromKey(key string) (float64, error) {
 
 func (m *Migration) SQL(sql string) {
 	m.sql = sql
+}
+
+func (m *Migration) SQLFromFile(path string) {
+	byteData, err := io.OpenFile(path)
+
+	if err != nil {
+		fmt.Println("Failed to open file ", err)
+		return
+	}
+
+	m.sql = string(byteData)
 }
 
 func (m *Migration) GetSQL() string {

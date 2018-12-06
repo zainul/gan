@@ -1,4 +1,4 @@
 {
     "dir":"/home/nakama/work/app/workspace/src/github.com/zainul/gan/examples",
-    "conn":"user=postgres password=***** dbname=kai host=localhost port=5432 sslmode=disable"
+    "conn":"user=postgres password=------ dbname=kai host=localhost port=5432 sslmode=disable"
 }
