@@ -25,6 +25,7 @@ func main() {
 	appCli := cli.NewApp()
 	appCli.Name = "gan"
 	appCli.Usage = "gan use for migrate and seed the database"
+	appCli.Version = "0.0.1"
 	appCli.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "config, c",
@@ -33,37 +34,54 @@ func main() {
 		},
 	}
 
-	appCli.Action = func(c *cli.Context) error {
-		cfg := openFile(config)
-		mig := app.NewMigration(cfg.Dir, cfg.Conn)
-		switch c.Args().Get(0) {
-		case constant.Migrate:
-			mig.Migrate(constant.StatusUp)
-		case constant.Seed:
-		case constant.CreateFromFile:
-			mig.CreateFile(
-				fmt.Sprintf("%v_%v_%v",
-					c.Args().Get(1),
-					time.Now().Format("20060102_150405"),
-					time.Now().UnixNano(),
-				),
-				constant.DotGo,
-				constant.FileTypeMigrationFromFile,
-			)
-		case constant.Create:
-			mig.CreateFile(
-				fmt.Sprintf("%v_%v_%v",
-					c.Args().Get(1),
-					time.Now().Format("20060102_150405"),
-					time.Now().UnixNano(),
-				),
-				constant.DotGo,
-				constant.FileTypeMigration,
-			)
-		default:
-		}
-
-		return nil
+	appCli.Commands = []cli.Command{
+		{
+			Name:  constant.Migrate,
+			Usage: "Migrate migrations script",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig.Migrate(constant.StatusUp)
+				return nil
+			},
+		},
+		{
+			Name:  constant.CreateFromFile,
+			Usage: "Create migration from SQL file",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig.CreateFile(
+					fmt.Sprintf("%v_%v_%v",
+						c.Args().Get(1),
+						time.Now().Format("20060102_150405"),
+						time.Now().UnixNano(),
+					),
+					constant.DotGo,
+					constant.FileTypeMigrationFromFile,
+				)
+				fmt.Println("completed task: ", c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name:  constant.Create,
+			Usage: "Create migration file",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig.CreateFile(
+					fmt.Sprintf("%v_%v_%v",
+						c.Args().First(),
+						time.Now().Format("20060102_150405"),
+						time.Now().UnixNano(),
+					),
+					constant.DotGo,
+					constant.FileTypeMigration,
+				)
+				return nil
+			},
+		},
 	}
 
 	err := appCli.Run(os.Args)
