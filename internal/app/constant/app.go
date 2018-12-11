@@ -6,4 +6,5 @@ const (
 	FileTypeMigrationFromFile = "migrationFromFile"
 	FileTypeMigrationUp       = "migrationUp"
 	FileTypeMigrationDown     = "migrationDown"
+	FileTypeCreationSeed      = "migrationSeed"
 )

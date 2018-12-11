@@ -53,6 +53,31 @@ func main() {
 			},
 		},
 		{
+			Name:  constant.Seed,
+			Usage: "Seed the data from file",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+				mig.Seed()
+				return nil
+			},
+		},
+		{
+			Name:  constant.CreateSeed,
+			Usage: "Create seed template file",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+				mig.CreateFile(
+					c.Args().First(),
+					constant.DotGo,
+					constant.FileTypeCreationSeed,
+				)
+				fmt.Println("completed task: ", c.Args().First())
+				return nil
+			},
+		},
+		{
 			Name:  constant.CreateFromFile,
 			Usage: "Create migration from SQL file",
 			Action: func(c *cli.Context) error {
@@ -86,16 +111,6 @@ func main() {
 					constant.DotGo,
 					constant.FileTypeMigration,
 				)
-				return nil
-			},
-		},
-		{
-			Name:  constant.Seed,
-			Usage: "Seed the data from file",
-			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
-				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
-				mig.Seed()
 				return nil
 			},
 		},

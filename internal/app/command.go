@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"text/template"
 
 	"github.com/zainul/gan/internal/app/io"
@@ -139,7 +140,12 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
 	sourceFilename := fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, fileType)
+
 	destinationFilename := fmt.Sprintf("%v/%v.%v", s.dir, name, extention)
+
+	if fileType == constant.FileTypeCreationSeed {
+		destinationFilename = fmt.Sprintf("%v/%v.%v", s.seedDir, name, extention)
+	}
 
 	// detect if file exists
 	var _, err = os.Stat(destinationFilename)
@@ -155,9 +161,11 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 		}
 
 		data := struct {
-			Key string
+			Key          string
+			KeyLowerCase string
 		}{
-			Key: name,
+			Key:          strings.Title(name),
+			KeyLowerCase: strings.ToLower(name),
 		}
 
 		var tpl bytes.Buffer
