@@ -14,13 +14,15 @@ import (
 )
 
 type Config struct {
-	Dir  string `json:"dir"`
-	Conn string `json:"conn"`
+	Dir     string `json:"dir"`
+	Conn    string `json:"conn"`
+	SeedDir string `json:"seed_dir"`
 }
 
 func main() {
 
 	var config string
+	var file string
 
 	appCli := cli.NewApp()
 	appCli.Name = "gan"
@@ -32,6 +34,11 @@ func main() {
 			Usage:       "Load configuration from `FILE`",
 			Destination: &config,
 		},
+		cli.StringFlag{
+			Name:        "filepath, f",
+			Usage:       "File path the list data use for seed tables `FILE`",
+			Destination: &file,
+		},
 	}
 
 	appCli.Commands = []cli.Command{
@@ -40,7 +47,7 @@ func main() {
 			Usage: "Migrate migrations script",
 			Action: func(c *cli.Context) error {
 				cfg := openFile(config)
-				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
 				mig.Migrate(constant.StatusUp)
 				return nil
 			},
@@ -50,10 +57,10 @@ func main() {
 			Usage: "Create migration from SQL file",
 			Action: func(c *cli.Context) error {
 				cfg := openFile(config)
-				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
 				mig.CreateFile(
 					fmt.Sprintf("%v_%v_%v",
-						c.Args().Get(1),
+						c.Args().First(),
 						time.Now().Format("20060102_150405"),
 						time.Now().UnixNano(),
 					),
@@ -69,7 +76,7 @@ func main() {
 			Usage: "Create migration file",
 			Action: func(c *cli.Context) error {
 				cfg := openFile(config)
-				mig := app.NewMigration(cfg.Dir, cfg.Conn)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
 				mig.CreateFile(
 					fmt.Sprintf("%v_%v_%v",
 						c.Args().First(),
@@ -79,6 +86,16 @@ func main() {
 					constant.DotGo,
 					constant.FileTypeMigration,
 				)
+				return nil
+			},
+		},
+		{
+			Name:  constant.Seed,
+			Usage: "Seed the data from file",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+				mig.Seed()
 				return nil
 			},
 		},

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jinzhu/gorm"
 	"github.com/zainul/gan/internal/app/constant"
 )
 
@@ -26,7 +27,8 @@ type Schema struct {
 }
 
 type store struct {
-	db *sql.DB
+	db     *sql.DB
+	gormDB *gorm.DB
 }
 
 func NewDB(sqlconn *sql.DB) DB {

@@ -16,18 +16,59 @@ import (
 type MigrationCommand interface {
 	CreateFile(name string, extention string, fileType string) error
 	Migrate(status string)
+	Seed()
 }
 
 type storeMigration struct {
-	dir  string `json:"dir"`
-	conn string `json:"conn"`
+	dir     string `json:"dir"`
+	conn    string `json:"conn"`
+	seedDir string `json:"seed_dir"`
 }
 
 // NewMigration ..
-func NewMigration(dir string, conn string) MigrationCommand {
+func NewMigration(dir string, conn string, seedDir string) MigrationCommand {
 	os.Setenv(constant.CONNDB, conn)
 	os.Setenv(constant.DIR, dir)
-	return &storeMigration{dir, conn}
+	return &storeMigration{dir, conn, seedDir}
+}
+
+func (s *storeMigration) Seed() {
+	// 1. make build by cmd
+	// 2. run the binary
+	// 3. delete the binary
+	ganseed := "ganseed"
+
+	// 1. make build by cmd
+	changeDirectory(s.seedDir)
+	cmd := exec.Command("go", "build", "-o", ganseed)
+
+	if _, err := cmd.CombinedOutput(); err != nil {
+		fmt.Println("read binary error while seed ", err)
+		deleteTempFile(s.seedDir, ganseed)
+		os.Exit(2)
+	}
+
+	fmt.Println("step 1. make build by cmd done ...")
+
+	// 2. run the binary
+	cmd = exec.Command(fmt.Sprintf("./%v", ganseed))
+	if out, err := cmd.CombinedOutput(); err != nil {
+		fmt.Println("error while run binary ", err, string(out))
+		deleteTempFile(s.seedDir, ganseed)
+		os.Exit(2)
+	} else {
+		fmt.Println("========================================================")
+		fmt.Println("SEEDER START")
+		fmt.Println("========================================================")
+		fmt.Println(string(out))
+		fmt.Println("========================================================")
+	}
+	fmt.Println("step 2. run the binary done...")
+
+	// 3. delete the binary
+	deleteTempFile(s.seedDir, ganseed)
+	fmt.Println("step 3. delete the binary done...")
+	os.Exit(2)
 }
 
 func (s *storeMigration) Migrate(status string) {
