@@ -1,5 +1,7 @@
 # Gan
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/zainul/gan)](https://goreportcard.com/report/github.com/zainul/gan)
+
 Gan is migration tool and seeder tool , currently we just supported only postgres
 
 ## Installation
