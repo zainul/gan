@@ -22,7 +22,6 @@ type Config struct {
 func main() {
 
 	var config string
-	var file string
 
 	appCli := cli.NewApp()
 	appCli.Name = "gan"
@@ -33,11 +32,6 @@ func main() {
 			Name:        "config, c",
 			Usage:       "Load configuration from `FILE`",
 			Destination: &config,
-		},
-		cli.StringFlag{
-			Name:        "filepath, f",
-			Usage:       "File path the list data use for seed tables `FILE`",
-			Destination: &file,
 		},
 	}
 
