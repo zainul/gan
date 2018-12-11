@@ -1,6 +1,8 @@
 package constant
 
 const (
-	DIR    = "GANDIR"
+	// DIR ..
+	DIR = "GANDIR"
+	// CONNDB ...
 	CONNDB = "GANCONN"
 )

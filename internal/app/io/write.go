@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// WriteFile ...
 func WriteFile(path string, content string) {
 	file, err := os.Create(path)
 

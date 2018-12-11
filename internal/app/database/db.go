@@ -10,6 +10,7 @@ import (
 	"github.com/zainul/gan/internal/app/constant"
 )
 
+// DB ...
 type DB interface {
 	Exec(sql string) error
 	Save(schema Schema) error
@@ -31,12 +32,14 @@ type store struct {
 	gormDB *gorm.DB
 }
 
+// NewDB ...
 func NewDB(sqlconn *sql.DB) DB {
 	return &store{
 		db: sqlconn,
 	}
 }
 
+// GetByMigrationKey ...
 func (s *store) GetByMigrationKey(key string) (err error) {
 	query := `SELECT id_migration from migrations where migration = $1`
 
@@ -68,6 +71,7 @@ func (s *store) GetByMigrationKey(key string) (err error) {
 	return
 }
 
+// Save ...
 func (s *store) Save(schema Schema) (err error) {
 	stmt, err := s.db.Prepare(constant.InsertTablePG)
 
@@ -87,6 +91,7 @@ func (s *store) Save(schema Schema) (err error) {
 	return
 }
 
+// Exec ...
 func (s *store) Exec(sql string) (err error) {
 	stmt, err := s.db.Prepare(sql)
 

@@ -1,6 +1,7 @@
 package constant
 
 const (
+	// MigrationTablePG ...
 	MigrationTablePG = `
 	CREATE TABLE  IF NOT EXISTS migrations (
 		id_migration SERIAL PRIMARY KEY,
@@ -12,5 +13,6 @@ const (
 		statements text
 	)
 	`
+	// InsertTablePG ...
 	InsertTablePG = `INSERT INTO migrations (migration, up, down, execute_up, execute_down, statements) values ($1, $2, $3, $4, $5, $6)`
 )

@@ -1,12 +1,20 @@
 package constant
 
 const (
-	Create         = "create_migration"
-	CreateSeed     = "create_seed_file"
+	// Create ...
+	Create = "create_migration"
+	// CreateSeed ...
+	CreateSeed = "create_seed_file"
+	// CreateFromFile ...
 	CreateFromFile = "create_migration_from_file"
-	Migrate        = "migrate"
-	Seed           = "seed"
-	Rollback       = "rollback"
-	SetDir         = "set_dir"
-	SetDB          = "set_db"
+	// Migrate ...
+	Migrate = "migrate"
+	// Seed ...
+	Seed = "seed"
+	// Rollback ...
+	Rollback = "rollback"
+	// SetDir ...
+	SetDir = "set_dir"
+	// SetDB ...
+	SetDB = "set_db"
 )

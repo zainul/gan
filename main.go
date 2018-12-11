@@ -13,6 +13,7 @@ import (
 	"github.com/zainul/gan/internal/app/io"
 )
 
+// Config ...
 type Config struct {
 	Dir     string `json:"dir"`
 	Conn    string `json:"conn"`

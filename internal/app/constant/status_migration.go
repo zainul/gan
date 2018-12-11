@@ -1,6 +1,8 @@
 package constant
 
 const (
-	StatusUp   = "up"
+	// StatusUp ...
+	StatusUp = "up"
+	// StatusDown ...
 	StatusDown = "down"
 )

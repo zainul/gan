@@ -1,6 +1,8 @@
 package constant
 
 const (
-	DotGo  = "go"
+	// DotGo ...
+	DotGo = "go"
+	// DotSQL ...
 	DotSQL = "sql"
 )

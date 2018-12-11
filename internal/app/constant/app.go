@@ -1,10 +1,16 @@
 package constant
 
 const (
-	PathAppName               = "src/github.com/zainul/gan"
-	FileTypeMigration         = "migration"
+	// PathAppName ...
+	PathAppName = "src/github.com/zainul/gan"
+	// FileTypeMigration ...
+	FileTypeMigration = "migration"
+	// FileTypeMigrationFromFile ...
 	FileTypeMigrationFromFile = "migrationFromFile"
-	FileTypeMigrationUp       = "migrationUp"
-	FileTypeMigrationDown     = "migrationDown"
-	FileTypeCreationSeed      = "migrationSeed"
+	// FileTypeMigrationUp ...
+	FileTypeMigrationUp = "migrationUp"
+	// FileTypeMigrationDown ...
+	FileTypeMigrationDown = "migrationDown"
+	// FileTypeCreationSeed ...
+	FileTypeCreationSeed = "migrationSeed"
 )

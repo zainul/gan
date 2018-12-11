@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// OpenFile ...
 func OpenFile(path string) ([]byte, error) {
 	jsonFile, err := os.Open(path)
 
