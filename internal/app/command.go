@@ -106,6 +106,10 @@ func (s *storeMigration) Migrate(status string) {
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// TODO: make remove temp binary
+		fmt.Println("========================================================")
+		fmt.Println("MIGRATION ERROR")
+		fmt.Println("========================================================")
+		fmt.Println(err, string(out))
 		deleteTempFile(s.Dir, "main.go")
 		deleteTempFile(s.Dir, "ganrun")
 		os.Exit(2)
