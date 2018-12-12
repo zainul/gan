@@ -93,21 +93,17 @@ func (s *store) Save(schema Schema) (err error) {
 
 // Exec ...
 func (s *store) Exec(sql string) (err error) {
-	stmt, err := s.db.Prepare(sql)
 
+	rows, err := s.db.Query(sql)
 	if err != nil {
-		fmt.Println("error when prepare query ", err)
-		return errors.New("failed to prepare the query")
-	}
-	_, err = stmt.Exec()
-
-	if err == nil {
-		fmt.Println("*********************************************************")
-		fmt.Println(sql)
-		fmt.Println("*********************************************************")
+		return err
 	}
 
-	err = stmt.Close()
+	fmt.Println("*********************************************************")
+	fmt.Println(sql)
+	fmt.Println("*********************************************************")
+
+	err = rows.Close()
 
 	return
 }
