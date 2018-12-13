@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli"
@@ -68,6 +69,43 @@ func main() {
 					constant.DotGo,
 					constant.FileTypeCreationSeed,
 				)
+				fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++")
+				fmt.Println("If you doesn't have main.go in your seed directory please copy the script below :")
+				lower := strings.ToLower(c.Args().First())
+				title := strings.Title(c.Args().First())
+
+				str := fmt.Sprintf(
+					`
+					%v, %vs := New%v(db)
+					seed.Seed(fmt.Sprintf("%v/%v.json", mainDir), %v, %vs)
+					`, lower, lower, title, "%v", lower, lower, lower,
+				)
+
+				fmt.Println(
+					`
+					package main
+
+					import (
+						"fmt"
+						"os"
+
+						"github.com/zainul/gan/pkg/seed"
+					)
+
+					func main() {
+						db := seed.GetDB()
+						gopath := os.Getenv("GOPATH")
+						mainDir := fmt.Sprintf("%v/src/github.com/your/directory/to/json", gopath)
+
+						
+					}
+
+					`,
+				)
+
+				fmt.Println("If already have main.go please add the script below")
+				fmt.Println(str)
+				fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++")
 				fmt.Println("completed task: ", c.Args().First())
 				return nil
 			},

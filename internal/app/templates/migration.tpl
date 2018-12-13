@@ -1,15 +1,15 @@
 package main
 
-import "github.com/zainul/gan/internal/app"
+import "github.com/zainul/gan/pkg/migration"
 
 type {{ .Key }} struct {
-	app.Migration
+	migration.Migration
 }
 
 func init() {
 	// will be some migration with up and down feature
 	m := &{{ .Key }}{}
-	app.Register("{{ .Key }}", m)
+	migration.Register("{{ .Key }}", m)
 }
 
 func (m *{{ .Key }}) Up() {

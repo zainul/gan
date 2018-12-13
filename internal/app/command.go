@@ -93,7 +93,12 @@ func (s *storeMigration) Migrate(status string) {
 	changeDirectory(s.Dir)
 	cmd := exec.Command("go", "build", "-o", "ganrun")
 
-	if _, err := cmd.CombinedOutput(); err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
+		fmt.Println("========================================================")
+		fmt.Println("Migration Error")
+		fmt.Println("========================================================")
+		fmt.Println(string(out), err)
+		fmt.Println("========================================================")
 		// TODO: make remove temp binary
 		deleteTempFile(s.Dir, "main.go")
 		deleteTempFile(s.Dir, "ganrun")

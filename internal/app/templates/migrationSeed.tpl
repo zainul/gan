@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/jinzhu/gorm"
-	"github.com/zainul/gan/internal/app"
+	"github.com/zainul/gan/pkg/seed"
 )
 
 // {{ .Key }} ...
@@ -41,7 +41,7 @@ func (s *{{ .KeyLowerCase }}) Create(v interface{}) error {
 }
 
 // New{{ .Key }} ...
-func New{{ .Key }}(db *gorm.DB) (app.Store, []{{ .Key }}) {
-	arr := make([]{{ .KeyLowerCase }}, 0)
-	return &house{db}, arr
+func New{{ .Key }}(db *gorm.DB) (seed.Store, []{{ .Key }}) {
+	arr := make([]{{ .Key }}, 0)
+	return &{{ .KeyLowerCase }}{db}, arr
 }
