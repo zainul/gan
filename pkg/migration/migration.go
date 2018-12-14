@@ -23,8 +23,14 @@ type Migration struct {
 }
 
 // Register ...
-func Register(name string, m app.Migrationer) error {
-	return app.SetMigration(name, m)
+func Register(name string, m app.Migrationer) {
+	err := app.SetMigration(name, m)
+
+	if err != nil {
+		fmt.Println("Failed to register")
+	}
+
+	return
 }
 
 // SQL ...
