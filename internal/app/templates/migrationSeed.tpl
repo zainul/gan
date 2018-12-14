@@ -18,10 +18,12 @@ func (h *{{ .Key }}) TableName() string {
 	return "your_table_name"
 }
 
+// {{ .KeyLowerCase }} ...
 type {{ .KeyLowerCase }} struct {
 	db *gorm.DB
 }
 
+// Create is method creation for seed
 func (s *{{ .KeyLowerCase }}) Create(v interface{}) error {
 	{{ .KeyLowerCase }} := {{ .Key }}{}
 

@@ -2,6 +2,7 @@ package main
 
 import "github.com/zainul/gan/pkg/migration"
 
+// {{ .Key }} ...
 type {{ .Key }} struct {
 	migration.Migration
 }
@@ -12,6 +13,7 @@ func init() {
 	migration.Register("{{ .Key }}", m)
 }
 
+// Up is migration up
 func (m *{{ .Key }}) Up() {
 	m.SQL(
 	// `
@@ -20,6 +22,7 @@ func (m *{{ .Key }}) Up() {
 	)
 }
 
+// Down migration down
 func (m *{{ .Key }}) Down() {
 	m.SQL(
 	// `
