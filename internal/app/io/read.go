@@ -2,29 +2,30 @@ package io
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/zainul/gan/internal/app/log"
 )
 
 // OpenFile ...
 func OpenFile(path string) ([]byte, error) {
-	fmt.Println("will be open file at ", path)
+	log.Info("will be open file at ", path)
 	jsonFile, err := os.Open(path)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return nil, errors.New("failed to open file")
 	}
 
-	fmt.Println("Successfully Opened file ", path)
+	log.Info("Successfully Opened file ", path)
 
 	byteJSON, err := ioutil.ReadAll(jsonFile)
 
 	defer jsonFile.Close()
 
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 
 	return byteJSON, err

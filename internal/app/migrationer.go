@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"github.com/zainul/gan/internal/app/constant"
 	"github.com/zainul/gan/internal/app/database"
 	"github.com/zainul/gan/internal/app/io"
+	"github.com/zainul/gan/internal/app/log"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -50,7 +50,7 @@ type Store interface {
 func GetDB() *gorm.DB {
 	db, err := gorm.Open("postgres", os.Getenv(constant.CONNDB))
 	if err != nil {
-		fmt.Println("failed to get instance")
+		log.Error("failed to get instance")
 		return nil
 	}
 
@@ -62,36 +62,36 @@ func Seed(path string, store Store, value ...interface{}) {
 	byteData, err := io.OpenFile(path)
 
 	if err != nil {
-		fmt.Println("error before seed ", err)
+		log.Error("error before seed ", err)
 		return
 	}
 	err = json.Unmarshal(byteData, &value)
 
 	if err != nil {
-		fmt.Println("error unmarshal type ", err)
+		log.Error("error unmarshal type ", err)
 	}
 
 	if constant.CONNDB == "" {
-		fmt.Println("please configure connection first ...")
+		log.Error("please configure connection first ...")
 		return
 	}
 
 	if err != nil {
-		fmt.Println("please fill with correct connection string ", err)
+		log.Error("please fill with correct connection string ", err)
 	}
 
-	fmt.Println("seed data from file ", path, " start ...")
+	log.Info("seed data from file ", path, " start ...")
 
 	for _, val := range value {
 
 		err = store.Create(val)
 
 		if err != nil {
-			fmt.Println("error while created data ", err)
+			log.Error("error while created data ", err)
 			return
 		}
 	}
-	fmt.Println("seed data from file ", path, " complete ...")
+	log.Info("seed data from file ", path, " complete ...")
 
 	return
 }
@@ -104,7 +104,7 @@ func SetExec() {
 		timeUnix, err := splitterTimeFromKey(key)
 
 		if err != nil {
-			fmt.Println("migration failed please fix your file ", err)
+			log.Error("migration failed please fix your file ", err)
 			return
 		}
 		migrations = append(migrations, Migration{
@@ -118,17 +118,17 @@ func SetExec() {
 		return migrations[i].unixNanoTime < migrations[j].unixNanoTime
 	})
 
-	// fmt.Println(migrations)
+	// log.Error(migrations)
 
 	if constant.CONNDB == "" {
-		fmt.Println("please configure connection first ...")
+		log.Error("please configure connection first ...")
 		return
 	}
 
 	conn, err := sql.Open("postgres", os.Getenv(constant.CONNDB))
 
 	if err != nil {
-		fmt.Println("failed make connection to DB please configure right connection")
+		log.Error("failed make connection to DB please configure right connection")
 		return
 	}
 	db := database.NewDB(conn)
@@ -136,7 +136,7 @@ func SetExec() {
 	err = db.Exec(constant.MigrationTablePG)
 
 	if err != nil {
-		fmt.Println("Failed craete migrations table ", err)
+		log.Error("Failed craete migrations table ", err)
 	}
 
 	for _, val := range migrations {
@@ -144,7 +144,7 @@ func SetExec() {
 		err = db.GetByMigrationKey(val.key)
 
 		if err != nil {
-			fmt.Println("get migration by key => ", err)
+			log.Error("get migration by key => ", err)
 			continue
 		}
 
@@ -158,12 +158,12 @@ func SetExec() {
 		}
 
 		if err != nil {
-			fmt.Println("Failed to execute the migration ", err)
+			log.Error("Failed to execute the migration ", err)
 			os.Exit(2)
 		}
 
 		if err = db.Save(sch); err != nil {
-			fmt.Println("error when create history migrations  ", err)
+			log.Error("error when create history migrations  ", err)
 		}
 	}
 }

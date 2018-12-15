@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/zainul/gan/internal/app"
 	"github.com/zainul/gan/internal/app/constant"
 	"github.com/zainul/gan/internal/app/io"
+	"github.com/zainul/gan/internal/app/log"
 )
 
 // Config ...
@@ -69,8 +69,8 @@ func main() {
 					constant.DotGo,
 					constant.FileTypeCreationSeed,
 				)
-				fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++")
-				fmt.Println("If you doesn't have main.go in your seed directory please copy the script below :")
+				log.Warning("+++++++++++++++++++++++++++++++++++++++++++++++++")
+				log.Warning("If you doesn't have main.go in your seed directory please copy the script below :")
 				lower := strings.ToLower(c.Args().First())
 				title := strings.Title(c.Args().First())
 
@@ -81,7 +81,7 @@ func main() {
 					`, lower, lower, title, "%v", lower, lower, lower,
 				)
 
-				fmt.Println(
+				log.Info(
 					`
 					package main
 
@@ -96,17 +96,15 @@ func main() {
 						db := seed.GetDB()
 						gopath := os.Getenv("GOPATH")
 						mainDir := fmt.Sprintf("%v/src/github.com/your/directory/to/json", gopath)
-
-						
 					}
 
 					`,
 				)
 
-				fmt.Println("If already have main.go please add the script below")
-				fmt.Println(str)
-				fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++")
-				fmt.Println("completed task: ", c.Args().First())
+				log.Warning("If already have main.go please add the script below")
+				log.Info(str)
+				log.Warning("+++++++++++++++++++++++++++++++++++++++++++++++++")
+				log.Info("completed task: ", c.Args().First())
 				return nil
 			},
 		},
@@ -125,7 +123,7 @@ func main() {
 					constant.DotGo,
 					constant.FileTypeMigrationFromFile,
 				)
-				fmt.Println("completed task: ", c.Args().First())
+				log.Info("completed task: ", c.Args().First())
 				return nil
 			},
 		},
@@ -151,7 +149,7 @@ func main() {
 
 	err := appCli.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 }
 
@@ -159,7 +157,7 @@ func openFile(config string) Config {
 	byteJSON, err := io.OpenFile(config)
 
 	if err != nil {
-		fmt.Println("Failed to open file ", err)
+		log.Error("Failed to open file ", err)
 		os.Exit(2)
 	}
 
@@ -168,16 +166,16 @@ func openFile(config string) Config {
 	err = json.Unmarshal(byteJSON, &cfg)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		os.Exit(2)
 	}
 
 	if cfg.Dir == "" || cfg.Conn == "" {
-		fmt.Println("Must set config first")
+		log.Error("Must set config first")
 		os.Exit(2)
 	}
 
-	fmt.Println("Config ", cfg.Conn)
-	fmt.Println("Directory ", cfg.Dir)
+	log.Warning("Config ", cfg.Conn)
+	log.Warning("Directory ", cfg.Dir)
 	return cfg
 }

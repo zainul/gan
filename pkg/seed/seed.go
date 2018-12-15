@@ -1,12 +1,12 @@
 package seed
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/jinzhu/gorm"
 	"github.com/zainul/gan/internal/app"
 	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/app/log"
 )
 
 type Store interface {
@@ -20,7 +20,7 @@ func Seed(path string, store Store, value ...interface{}) {
 func GetDB() *gorm.DB {
 	db, err := gorm.Open("postgres", os.Getenv(constant.CONNDB))
 	if err != nil {
-		fmt.Println("failed to get instance")
+		log.Error("failed to get instance")
 		return nil
 	}
 
