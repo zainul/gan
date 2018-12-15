@@ -8,6 +8,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/app/log"
 )
 
 // DB ...
@@ -53,7 +54,7 @@ func (s *store) GetByMigrationKey(key string) (err error) {
 	err = stmt.Close()
 
 	if err != nil {
-		fmt.Println("failed when query get migration ", err)
+		log.Error("failed when query get migration ", err)
 		return
 	}
 
@@ -64,7 +65,7 @@ func (s *store) GetByMigrationKey(key string) (err error) {
 
 	if i > 0 {
 		err = errors.New("migration already exist")
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
 
@@ -83,7 +84,7 @@ func (s *store) Save(schema Schema) (err error) {
 	_, err = stmt.Exec(schema.Migration, schema.Up, schema.Down, schema.ExecuteUp, schema.ExecuteDown, schema.Statement)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 
 	err = stmt.Close()
@@ -99,9 +100,9 @@ func (s *store) Exec(sql string) (err error) {
 		return err
 	}
 
-	fmt.Println("*********************************************************")
-	fmt.Println(sql)
-	fmt.Println("*********************************************************")
+	log.Info("*********************************************************")
+	log.Info(sql)
+	log.Info("*********************************************************")
 
 	err = rows.Close()
 

@@ -3,7 +3,7 @@ package constant
 const (
 	// MigrationTablePG ...
 	MigrationTablePG = `
-	CREATE TABLE  IF NOT EXISTS migrations (
+	CREATE TABLE IF NOT EXISTS migrations (
 		id_migration SERIAL PRIMARY KEY,
 		migration varchar(500) DEFAULT NULL,
 		up boolean DEFAULT NULL,

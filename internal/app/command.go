@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/zainul/gan/internal/app/io"
+	"github.com/zainul/gan/internal/app/log"
 
 	"github.com/zainul/gan/internal/app/constant"
 )
@@ -47,31 +48,31 @@ func (s *storeMigration) Seed() {
 	cmd := exec.Command("go", "build", "-o", ganseed)
 
 	if _, err := cmd.CombinedOutput(); err != nil {
-		fmt.Println("read binary error while seed ", err)
+		log.Error("read binary error while seed ", err)
 		deleteTempFile(s.SeedDir, ganseed)
 		os.Exit(2)
 	}
 
-	fmt.Println("step 1. make build by cmd done ...")
+	log.Info("step 1. make build by cmd done ...")
 
 	// 2. run the binary
 	cmd = exec.Command(fmt.Sprintf("./%v", ganseed))
 	if out, err := cmd.CombinedOutput(); err != nil {
-		fmt.Println("error while run binary ", err, string(out))
+		log.Error("Error while run binary ", err, string(out))
 		deleteTempFile(s.SeedDir, ganseed)
 		os.Exit(2)
 	} else {
-		fmt.Println("========================================================")
-		fmt.Println("SEEDER START")
-		fmt.Println("========================================================")
-		fmt.Println(string(out))
-		fmt.Println("========================================================")
+		log.Info("========================================================")
+		log.Info("SEEDER START")
+		log.Info("========================================================")
+		log.Info(string(out))
+		log.Info("========================================================")
 	}
-	fmt.Println("step 2. run the binary done...")
+	log.Info("step 2. run the binary done...")
 
 	// 3. delete the binary
 	deleteTempFile(s.SeedDir, ganseed)
-	fmt.Println("step 3. delete the binary done...")
+	log.Info("step 3. delete the binary done...")
 	os.Exit(2)
 }
 
@@ -94,11 +95,11 @@ func (s *storeMigration) Migrate(status string) {
 	cmd := exec.Command("go", "build", "-o", "ganrun")
 
 	if out, err := cmd.CombinedOutput(); err != nil {
-		fmt.Println("========================================================")
-		fmt.Println("Migration Error")
-		fmt.Println("========================================================")
-		fmt.Println(string(out), err)
-		fmt.Println("========================================================")
+		log.Error("========================================================")
+		log.Error("Migration Error")
+		log.Error("========================================================")
+		log.Error(string(out), err)
+		log.Error("========================================================")
 		// TODO: make remove temp binary
 		deleteTempFile(s.Dir, "main.go")
 		deleteTempFile(s.Dir, "ganrun")
@@ -111,39 +112,39 @@ func (s *storeMigration) Migrate(status string) {
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// TODO: make remove temp binary
-		fmt.Println("========================================================")
-		fmt.Println("MIGRATION ERROR")
-		fmt.Println("========================================================")
-		fmt.Println(err, string(out))
+		log.Error("========================================================")
+		log.Error("MIGRATION ERROR")
+		log.Error("========================================================")
+		log.Error(err, string(out))
 		deleteTempFile(s.Dir, "main.go")
 		deleteTempFile(s.Dir, "ganrun")
 		os.Exit(2)
 	} else {
-		fmt.Println("========================================================")
-		fmt.Println("MIGRATION START")
-		fmt.Println("========================================================")
-		fmt.Println(string(out))
-		fmt.Println("========================================================")
+		log.Info("========================================================")
+		log.Info("MIGRATION START")
+		log.Info("========================================================")
+		log.Info(string(out))
+		log.Info("========================================================")
 	}
 
 	// 4. delete the binary and main.go
 	deleteTempFile(s.Dir, "main.go")
 	deleteTempFile(s.Dir, "ganrun")
-	fmt.Println("Gan Migration success ...  !!!")
+	log.Info("Gan Migration success ...  !!!")
 	os.Exit(2)
 
 }
 
 func changeDirectory(dir string) {
 	if err := os.Chdir(dir); err != nil {
-		fmt.Println("Could not find migration directory: %s", err)
+		log.Error("Could not find migration directory: %s", err)
 	}
 }
 
 func deleteTempFile(dir, file string) {
 	changeDirectory(dir)
 	if err := os.Remove(file); err != nil {
-		fmt.Println("Could not remove temporary file: %s", err)
+		log.Error("Could not remove temporary file: %s", err)
 	}
 }
 
@@ -161,14 +162,14 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 
 	// detect if file exists
 	var _, err = os.Stat(destinationFilename)
-	fmt.Println("will be create file in directory ...", destinationFilename)
+	log.Info("will be create file in directory ...", destinationFilename)
 
 	// create file if not exists
 	if os.IsNotExist(err) {
 		tmpl, err := template.ParseFiles(sourceFilename)
 
 		if err != nil {
-			fmt.Println("Failed create file ...", err)
+			log.Error("Failed create file ...", err)
 			return err
 		}
 
@@ -184,13 +185,13 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 		err = tmpl.Execute(&tpl, data)
 
 		if err != nil {
-			fmt.Println("failed creating the file ", err)
+			log.Error("failed creating the file ", err)
 		}
 
 		tplStr := tpl.String()
 		io.WriteFile(destinationFilename, tplStr)
 	}
 
-	fmt.Println("done creating file ")
+	log.Info("done creating file ")
 	return nil
 }

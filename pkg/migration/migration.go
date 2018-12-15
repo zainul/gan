@@ -1,11 +1,10 @@
 package migration
 
 import (
-	"fmt"
-
 	"github.com/zainul/gan/internal/app"
 	"github.com/zainul/gan/internal/app/constant"
 	"github.com/zainul/gan/internal/app/io"
+	"github.com/zainul/gan/internal/app/log"
 )
 
 const (
@@ -27,7 +26,7 @@ func Register(name string, m app.Migrationer) {
 	err := app.SetMigration(name, m)
 
 	if err != nil {
-		fmt.Println("Failed to register")
+		log.Error("Failed to register")
 	}
 
 	return
@@ -43,7 +42,7 @@ func (m *Migration) Exec(status string) {
 	if status == constant.StatusUp {
 		app.SetExec()
 	} else if status == constant.StatusDown {
-		fmt.Println("status down", m.sql)
+		log.Info("status down", m.sql)
 	}
 }
 
@@ -52,7 +51,7 @@ func (m *Migration) SQLFromFile(path string) {
 	byteData, err := io.OpenFile(path)
 
 	if err != nil {
-		fmt.Println("Failed to open file ", err)
+		log.Error("Failed to open file ", err)
 		return
 	}
 
