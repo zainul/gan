@@ -9,23 +9,21 @@ import (
 )
 
 // {{ .Key }} ...
-type {{ .Key }} struct {
-	//Name string `json:"name" gorm:"column:name;"`
-}
+{{.StructTemplate}}
 
 // TableName ...
-func (h *{{ .Key }}) TableName() string {
-	return "your_table_name"
+func (h *{{ .StructNameLower }}) TableName() string {
+	return "{{.TableName}}"
 }
 
-// {{ .KeyLowerCase }} ...
-type {{ .KeyLowerCase }} struct {
+// {{ .StructNameLower }} ...
+type {{ .StructNameLower }} struct {
 	db *gorm.DB
 }
 
 // Create is method creation for seed
-func (s *{{ .KeyLowerCase }}) Create(v interface{}) error {
-	{{ .KeyLowerCase }} := {{ .Key }}{}
+func (s *{{ .StructNameLower }}) Create(v interface{}) error {
+	{{ .StructNameLower }} := {{ .StructName }}{}
 
 	bytes, err := json.Marshal(v)
 
@@ -33,17 +31,17 @@ func (s *{{ .KeyLowerCase }}) Create(v interface{}) error {
 		return errors.New("failed to marshal data")
 	}
 
-	err = json.Unmarshal(bytes, &{{ .KeyLowerCase }})
+	err = json.Unmarshal(bytes, &{{ .StructNameLower }})
 
 	if err != nil {
 		return err
 	}
 
-	return s.db.Create({{ .KeyLowerCase }}).Error
+	return s.db.Create({{ .StructNameLower }}).Error
 }
 
-// New{{ .Key }} ...
-func New{{ .Key }}(db *gorm.DB) (seed.Store, []{{ .Key }}) {
-	arr := make([]{{ .Key }}, 0)
-	return &{{ .KeyLowerCase }}{db}, arr
+// New{{ .StructName }} ...
+func New{{ .StructName }}(db *gorm.DB) (seed.Store, []{{ .StructName }}) {
+	arr := make([]{{ .StructName }}, 0)
+	return &{{ .StructNameLower }}{db}, arr
 }

@@ -17,4 +17,6 @@ const (
 	SetDir = "set_dir"
 	// SetDB ...
 	SetDB = "set_db"
+	// ReverseForSeed ....
+	ReverseForSeed = "reverse_for_seed"
 )
