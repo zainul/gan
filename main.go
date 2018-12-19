@@ -60,42 +60,82 @@ func main() {
 				return nil
 			},
 		},
-		// {
-		// 	Name:  constant.ReverseForSeed,
-		// 	Usage: "Reverse table to struct and the added to seeder package",
-		// 	Action: func(c *cli.Context) error {
-		// 		cfg := openFile(config)
-		// 		mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+		{
+			Name:  constant.ReverseForSeed,
+			Usage: "Reverse table to struct and the added to seeder package",
+			Action: func(c *cli.Context) error {
+				cfg := openFile(config)
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
 
-		// 		conn, err := sql.Open("postgres", os.Getenv(constant.CONNDB))
+				conn, err := sql.Open("postgres", os.Getenv(constant.CONNDB))
 
-		// 		if err != nil {
-		// 			log.Error("failed make connection to DB please configure right connection")
-		// 			os.Exit(2)
-		// 		}
-		// 		db := database.NewDB(conn)
+				if err != nil {
+					log.Error("failed make connection to DB please configure right connection")
+					os.Exit(2)
+				}
+				db := database.NewDB(conn)
 
-		// 		resp, err := db.GetEntity("all")
+				resp, err := db.GetEntity("all")
 
-		// 		if err != nil {
-		// 			log.Error("failed to execute get schema")
-		// 			os.Exit(2)
-		// 		}
+				if err != nil {
+					log.Error("failed to execute get schema ", err)
+					os.Exit(2)
+				}
 
-		// 		for _, val := range resp {
-		// 			mig.CreateFile(
-		// 				c.Args().First(),
-		// 				constant.DotGo,
-		// 				constant.FileTypeCreationSeed,
-		// 				val.Models,
-		// 				val.TableName,
-		// 				val.StructName,
-		// 			)
-		// 		}
+				if len(resp) == 0 {
+					log.Error("Cannot find table name")
+					os.Exit(2)
+				}
 
-		// 		return nil
-		// 	},
-		// },
+				log.Warning("+++++++++++++++++++++++++++++++++++++++++++++++++")
+				log.Warning("If you doesn't have main.go in your seed directory please copy the script below :")
+
+				log.Info(
+					`
+					package main
+
+					import (
+						"fmt"
+						"os"
+
+						"github.com/zainul/gan/pkg/seed"
+					)
+
+					func main() {
+						db := seed.GetDB()
+						gopath := os.Getenv("GOPATH")
+						mainDir := fmt.Sprintf("%v/src/github.com/your/directory/to/json", gopath)
+					}
+
+					`,
+				)
+
+				for _, val := range resp {
+					var strOut string
+					mig.CreateFile(
+						val.TableName,
+						constant.DotGo,
+						constant.FileTypeCreationSeed,
+						val.Models,
+						val.StructName,
+					)
+
+					strctLower := strings.ToLower(val.StructName)
+					strOut = fmt.Sprintf(
+						`
+					%v, %vs := New%v(db)
+					seed.Seed(fmt.Sprintf("%v/%v.json", mainDir), %v, %vs)
+					`, strctLower, strctLower, strctLower, "%v", val.StructName, strctLower, strctLower,
+					)
+
+					log.Warning("+++++++++++++++++++++++++++++++++++++++++++++++++")
+					log.Info(strOut)
+					log.Warning("+++++++++++++++++++++++++++++++++++++++++++++++++")
+				}
+
+				return nil
+			},
+		},
 		{
 			Name:  constant.CreateSeed,
 			Usage: "Create seed template file",
