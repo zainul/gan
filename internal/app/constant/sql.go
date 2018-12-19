@@ -38,7 +38,7 @@ const (
 			  -- add your own type converters as needed or it will default to 'string'
 			  ELSE 'string'
 			  END AS type_info,
-			  '%sjson:"' || column_name ||'"%s' AS annotation
+			  '%sjson:"' || column_name ||'" gorm:"column:'|| column_name ||';"%s' AS annotation
 		  FROM information_schema.columns
 		  WHERE table_schema IN ('public')
 		  %s

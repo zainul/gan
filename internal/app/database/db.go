@@ -52,7 +52,7 @@ func NewDB(sqlconn *sql.DB) DB {
 // GetEntity ...
 func (s *store) GetEntity(tableName string) ([]StructWithTablenName, error) {
 	query := getReverse(tableName)
-	// log.Debug(query)
+	// log.Info(query)
 	rows, err := s.db.Query(query)
 	if err != nil {
 		return []StructWithTablenName{}, err
