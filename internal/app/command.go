@@ -16,7 +16,7 @@ import (
 
 // Migration is type for creating thing that related with migration database
 type MigrationCommand interface {
-	CreateFile(name string, extention string, fileType string) error
+	CreateFile(name string, extention string, fileType string, additionalInfo ...string) error
 	Migrate(status string)
 	Seed()
 }
@@ -148,7 +148,13 @@ func deleteTempFile(dir, file string) {
 	}
 }
 
-func (s *storeMigration) CreateFile(name string, extention string, fileType string) error {
+func (s *storeMigration) CreateFile(name string, extention string, fileType string, additionalInfo ...string) error {
+	// additionalInfo :
+	// 0. template
+	tableName := name
+	name = strings.ToLower(name)
+	var structName string
+	var structTemplate string
 
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
@@ -157,6 +163,13 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	destinationFilename := fmt.Sprintf("%v/%v.%v", s.Dir, name, extention)
 
 	if fileType == constant.FileTypeCreationSeed {
+		if len(additionalInfo) > 1 {
+			structTemplate = additionalInfo[0]
+			structName = additionalInfo[1]
+		} else {
+			log.Error("Please provide table name")
+			os.Exit(2)
+		}
 		destinationFilename = fmt.Sprintf("%v/%v.%v", s.SeedDir, name, extention)
 	}
 
@@ -174,11 +187,19 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 		}
 
 		data := struct {
-			Key          string
-			KeyLowerCase string
+			Key             string
+			KeyLowerCase    string
+			StructName      string
+			StructNameLower string
+			StructTemplate  string
+			TableName       string
 		}{
-			Key:          strings.Title(name),
-			KeyLowerCase: strings.ToLower(name),
+			Key:             strings.Title(name),
+			KeyLowerCase:    strings.ToLower(name),
+			StructName:      structName,
+			StructNameLower: strings.ToLower(structName),
+			StructTemplate:  structTemplate,
+			TableName:       tableName,
 		}
 
 		var tpl bytes.Buffer

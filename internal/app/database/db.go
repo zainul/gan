@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -16,6 +17,14 @@ type DB interface {
 	Exec(sql string) error
 	Save(schema Schema) error
 	GetByMigrationKey(key string) error
+	GetEntity(tableName string) ([]StructWithTablenName, error)
+}
+
+// StructWithTablenName ...
+type StructWithTablenName struct {
+	Models     string
+	TableName  string
+	StructName string
 }
 
 // Schema is represent table migrations to save history of migrations db
@@ -38,6 +47,32 @@ func NewDB(sqlconn *sql.DB) DB {
 	return &store{
 		db: sqlconn,
 	}
+}
+
+// GetEntity ...
+func (s *store) GetEntity(tableName string) ([]StructWithTablenName, error) {
+	query := getReverse(tableName)
+	// log.Debug(query)
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return []StructWithTablenName{}, err
+	}
+	structs := make([]StructWithTablenName, 0)
+	for rows.Next() {
+		var tmpl string
+		var tableName string
+		var structName string
+		rows.Scan(&tmpl, &structName, &tableName)
+
+		strc := StructWithTablenName{
+			Models:     tmpl,
+			TableName:  tableName,
+			StructName: structName,
+		}
+		structs = append(structs, strc)
+	}
+
+	return structs, nil
 }
 
 // GetByMigrationKey ...
@@ -107,4 +142,12 @@ func (s *store) Exec(sql string) (err error) {
 	err = rows.Close()
 
 	return
+}
+
+func getReverse(tableName string) string {
+	queryAll := ``
+	if strings.ToLower(tableName) != strings.ToLower("all") {
+		queryAll = fmt.Sprintf(` AND table_name = '%s' `, tableName)
+	}
+	return fmt.Sprintf(constant.ReversePG, "`", "`", queryAll)
 }
