@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	{{.Dependencies}}
+
 	"github.com/jinzhu/gorm"
 	"github.com/zainul/gan/pkg/seed"
 )
@@ -12,18 +14,18 @@ import (
 {{.StructTemplate}}
 
 // TableName ...
-func (h *{{ .StructNameLower }}) TableName() string {
+func (h *{{ .StructName }}) TableName() string {
 	return "{{.TableName}}"
 }
 
-// {{ .StructNameLower }} ...
-type {{ .StructNameLower }} struct {
+// store{{ .StructName }} ...
+type store{{ .StructName }} struct {
 	db *gorm.DB
 }
 
 // Create is method creation for seed
-func (s *{{ .StructNameLower }}) Create(v interface{}) error {
-	{{ .StructNameLower }} := {{ .StructName }}{}
+func (s *store{{ .StructName }}) Create(v interface{}) error {
+	obj{{ .StructName }} := {{ .StructName }}{}
 
 	bytes, err := json.Marshal(v)
 
@@ -31,17 +33,17 @@ func (s *{{ .StructNameLower }}) Create(v interface{}) error {
 		return errors.New("failed to marshal data")
 	}
 
-	err = json.Unmarshal(bytes, &{{ .StructNameLower }})
+	err = json.Unmarshal(bytes, &obj{{ .StructName }})
 
 	if err != nil {
 		return err
 	}
 
-	return s.db.Create({{ .StructNameLower }}).Error
+	return s.db.Create(obj{{ .StructName }}).Error
 }
 
 // New{{ .StructName }} ...
 func New{{ .StructName }}(db *gorm.DB) (seed.Store, []{{ .StructName }}) {
 	arr := make([]{{ .StructName }}, 0)
-	return &{{ .StructNameLower }}{db}, arr
+	return &store{{ .StructName }}{db}, arr
 }

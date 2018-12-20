@@ -155,6 +155,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	name = strings.ToLower(name)
 	var structName string
 	var structTemplate string
+	var dep string
 
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
@@ -171,6 +172,16 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			os.Exit(2)
 		}
 		destinationFilename = fmt.Sprintf("%v/%v.%v", s.SeedDir, name, extention)
+
+		if strings.Contains(structTemplate, "time.Time") {
+			dep = `
+			"time"
+			`
+		}
+
+		structTemplate = strings.Replace(structTemplate, "Id", "ID", -1)
+
+		structName = strings.Replace(structName, "Id", "ID", -1)
 	}
 
 	// detect if file exists
@@ -193,6 +204,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			StructNameLower string
 			StructTemplate  string
 			TableName       string
+			Dependencies    string
 		}{
 			Key:             strings.Title(name),
 			KeyLowerCase:    strings.ToLower(name),
@@ -200,6 +212,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			StructNameLower: strings.ToLower(structName),
 			StructTemplate:  structTemplate,
 			TableName:       tableName,
+			Dependencies:    dep,
 		}
 
 		var tpl bytes.Buffer
@@ -214,5 +227,18 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	}
 
 	log.Info("done creating file ")
+
+	cmd := exec.Command("gofmt", "-l", "-w", destinationFilename)
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Error("========================================================")
+		log.Error("Go Fmt Error")
+		log.Error("========================================================")
+		log.Error(string(out), err)
+		log.Error("========================================================")
+	}
+
+	log.Info("Formatting file done ...")
+
 	return nil
 }
