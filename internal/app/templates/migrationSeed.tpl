@@ -39,7 +39,7 @@ func (s *store{{ .StructName }}) Create(v interface{}) error {
 		return err
 	}
 
-	return s.db.Create(obj{{ .StructName }}).Error
+	return s.db.Create(&obj{{ .StructName }}).Error
 }
 
 // New{{ .StructName }} ...
