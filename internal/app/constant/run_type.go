@@ -19,4 +19,6 @@ const (
 	SetDB = "set_db"
 	// ReverseForSeed ....
 	ReverseForSeed = "reverse_for_seed"
+	// CreateApp ...
+	CreateApp = "create_app"
 )

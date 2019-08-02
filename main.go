@@ -29,6 +29,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 		{Text: constant.CreateSeed, Description: "Create seed template file"},
 		{Text: constant.CreateFromFile, Description: "Create migration from SQL file"},
 		{Text: constant.Create, Description: "Create migration file"},
+		{Text: constant.CreateApp, Description: "Create starter apps"},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
@@ -42,6 +43,11 @@ func completerConfig(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "migrations/config.json", Description: "By Author"},
 	}
+	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
+}
+
+func completerConfigCreateApp(d prompt.Document) []prompt.Suggest {
+	s := []prompt.Suggest{}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
@@ -140,6 +146,14 @@ ______ _______ __   _
 				return nil
 			},
 		},
+		{
+			Name:  constant.CreateApp,
+			Usage: "Create Starter Apps service",
+			Action: func(c *cli.Context) error {
+				fmt.Println("Hi , I will serve service for you with ♥ ")
+				return nil
+			},
+		},
 	}
 
 	err := appCli.Run(os.Args)
@@ -198,6 +212,13 @@ ______ _______ __   _
 		}
 		cfg := openFile(config)
 		migrationFile(cfg, entity)
+		break
+	case constant.CreateApp:
+		name := prompt.Input("What is your service name ? ", completerConfigCreateApp)
+		packageName := prompt.Input("What your root of your package you want ? ", completerConfigCreateApp)
+		yourPath := prompt.Input("Your GOPATH ? ", completerConfigCreateApp)
+		fmt.Println("Hi , I will serve service " + name + " for you with ♥ ")
+		copyFindAndReplace(name, packageName, yourPath)
 		break
 	}
 
