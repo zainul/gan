@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,16 +10,20 @@ import (
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/urfave/cli"
+	"github.com/zainul/gan/internal/app"
 	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/app/database"
 	"github.com/zainul/gan/internal/app/io"
 	"github.com/zainul/gan/internal/app/log"
 )
 
 // Config ...
 type Config struct {
-	Dir     string `json:"dir"`
-	Conn    string `json:"conn"`
-	SeedDir string `json:"seed_dir"`
+	Dir              string                `json:"dir"`
+	Conn             string                `json:"conn"`
+	SeedDir          string                `json:"seed_dir"`
+	ProjectPackage   string                `json:"project_package"`
+	ProjectStructure *app.ProjectStructure `json:"project_structure"`
 }
 
 func completer(d prompt.Document) []prompt.Suggest {
@@ -30,6 +35,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 		{Text: constant.CreateFromFile, Description: "Create migration from SQL file"},
 		{Text: constant.Create, Description: "Create migration file"},
 		{Text: constant.CreateApp, Description: "Create starter apps"},
+		{Text: constant.ReverseDB, Description: "Reverse DB to Entity and Repo"},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
@@ -154,6 +160,14 @@ ______ _______ __   _
 				return nil
 			},
 		},
+		{
+			Name:  constant.ReverseDB,
+			Usage: "Reverse DB to Entity Repo",
+			Action: func(c *cli.Context) error {
+				fmt.Println("Hi , I will serve you with ♥ ")
+				return nil
+			},
+		},
 	}
 
 	err := appCli.Run(os.Args)
@@ -219,6 +233,39 @@ ______ _______ __   _
 		yourPath := prompt.Input("Your GOPATH ? ", completerConfigCreateApp)
 		fmt.Println("Hi , I will serve service " + name + " for you with ♥ ")
 		copyFindAndReplace(name, packageName, yourPath)
+		break
+	case constant.ReverseDB:
+		config := prompt.Input("Where is the config file stored ?", completerConfig)
+		cfg := openFile(config)
+
+		mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir, cfg.ProjectStructure, cfg.ProjectPackage)
+
+		if cfg.ProjectStructure != nil {
+			conn, err := sql.Open("postgres", cfg.Conn)
+			db := database.NewDB(conn)
+			structs, err := db.GetEntityWithoutTableName()
+			if err != nil {
+				log.Error(err)
+				os.Exit(2)
+			}
+
+			for _, strc := range structs {
+				mig.CreateFile(strc.TableName, constant.DotGo, constant.FileTypeReverse, strc.Models, constant.CreateEntity, strc.TableName)
+			}
+
+			for _, strc := range structs {
+				mig.CreateFile(strc.TableName, constant.DotGo, constant.FileTypeReverse, strc.Models, constant.CreateUseCase, strc.TableName)
+			}
+
+			for _, strc := range structs {
+				mig.CreateFile(strc.TableName, constant.DotGo, constant.FileTypeReverse, strc.Models, constant.CreateStore, strc.TableName)
+			}
+
+			for _, strc := range structs {
+				mig.CreateFile(strc.TableName, constant.DotGo, constant.FileTypeReverse, strc.Models, constant.CreateStoreImpl, strc.TableName)
+			}
+
+		}
 		break
 	}
 

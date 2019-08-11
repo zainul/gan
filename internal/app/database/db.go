@@ -18,6 +18,7 @@ type DB interface {
 	Save(schema Schema) error
 	GetByMigrationKey(key string) error
 	GetEntity(tableName string) ([]StructWithTablenName, error)
+	GetEntityWithoutTableName() ([]StructWithTablenName, error)
 }
 
 // StructWithTablenName ...
@@ -47,6 +48,30 @@ func NewDB(sqlconn *sql.DB) DB {
 	return &store{
 		db: sqlconn,
 	}
+}
+
+// GetEntity ...
+func (s *store) GetEntityWithoutTableName() ([]StructWithTablenName, error) {
+	query := getReverseWithoutTbale()
+	log.Info(query)
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return []StructWithTablenName{}, err
+	}
+	structs := make([]StructWithTablenName, 0)
+	for rows.Next() {
+		var tmpl string
+		var tableName string
+		rows.Scan(&tmpl, &tableName)
+
+		strc := StructWithTablenName{
+			Models:    tmpl,
+			TableName: tableName,
+		}
+		structs = append(structs, strc)
+	}
+
+	return structs, nil
 }
 
 // GetEntity ...
@@ -142,6 +167,10 @@ func (s *store) Exec(sql string) (err error) {
 	err = rows.Close()
 
 	return
+}
+
+func getReverseWithoutTbale() string {
+	return fmt.Sprintf(constant.ReversePG, "`", "`", ``)
 }
 
 func getReverse(tableName string) string {
