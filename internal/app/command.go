@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -16,9 +17,22 @@ import (
 
 // Migration is type for creating thing that related with migration database
 type MigrationCommand interface {
-	CreateFile(name string, extention string, fileType string, additionalInfo ...string) error
+	CreateFile(name string, extention string, fileType string, additionalInfo ...interface{}) error
 	Migrate(status string)
 	Seed()
+}
+
+// ProjectStructure ...
+type ProjectStructure struct {
+	Entity  Item `json:"entity"`
+	Store   Item `json:"repository"`
+	Usecase Item `json:"usecase"`
+}
+
+// Item ...
+type Item struct {
+	Dir      string `json:"dir"`
+	Template string `json:"template"`
 }
 
 type storeMigration struct {
@@ -27,14 +41,36 @@ type storeMigration struct {
 	// conn is connection string to DB
 	Conn string `json:"conn"`
 	// seedDir  is directory for seed file will be placed
-	SeedDir string `json:"seed_dir"`
+	SeedDir          string            `json:"seed_dir"`
+	ProjectStructure *ProjectStructure `json:"project_structure"`
+
+	ProjectPackage string `json:"project_package"`
 }
 
 // NewMigration ..
-func NewMigration(dir string, conn string, seedDir string) MigrationCommand {
+func NewMigration(dir string, conn string, seedDir string, projectStructere ...interface{}) MigrationCommand {
 	os.Setenv(constant.CONNDB, conn)
 	os.Setenv(constant.DIR, dir)
-	return &storeMigration{dir, conn, seedDir}
+
+	var pj *ProjectStructure
+	var pk string
+
+	if projectStructere != nil && len(projectStructere) > 0 {
+		item := projectStructere[0]
+		pj = item.(*ProjectStructure)
+	}
+
+	if len(projectStructere) > 1 {
+		pk = projectStructere[1].(string)
+		os.Setenv(constant.THORPACKAGE, pk)
+	}
+	return &storeMigration{
+		Dir:              dir,
+		Conn:             conn,
+		SeedDir:          seedDir,
+		ProjectStructure: pj,
+		ProjectPackage:   pk,
+	}
 }
 
 func (s *storeMigration) Seed() {
@@ -148,14 +184,13 @@ func deleteTempFile(dir, file string) {
 	}
 }
 
-func (s *storeMigration) CreateFile(name string, extention string, fileType string, additionalInfo ...string) error {
-	// additionalInfo :
-	// 0. template
-	tableName := name
+func (s *storeMigration) CreateFile(name string, extention string, fileType string, additionalInfo ...interface{}) error {
+	var process string
+	var customTemplateInput string
+	var ReqTemplateInput string
+	var tableName string
+	structName := name
 	name = strings.ToLower(name)
-	var structName string
-	var structTemplate string
-	var dep string
 
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
@@ -164,29 +199,62 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 	destinationFilename := fmt.Sprintf("%v/%v.%v", s.Dir, name, extention)
 
 	if fileType == constant.FileTypeCreationSeed {
-		if len(additionalInfo) > 1 {
-			structTemplate = additionalInfo[0]
-			structName = additionalInfo[1]
+		destinationFilename = fmt.Sprintf("%v/%v.%v", s.SeedDir, name, extention)
+	} else if fileType == constant.FileTypeReverse {
+
+		if additionalInfo != nil && len(additionalInfo) > 1 {
+			process = additionalInfo[1].(string)
 		} else {
-			log.Error("Please provide table name")
+			log.Error("Please provide valid config for reverse")
 			os.Exit(2)
 		}
-		destinationFilename = fmt.Sprintf("%v/%v.%v", s.SeedDir, name, extention)
 
-		if strings.Contains(structTemplate, "time.Time") {
-			dep = `
-			"time"
-			`
+		customTemplateInput = additionalInfo[0].(string)
+		tableName = additionalInfo[2].(string)
+		ReqTemplateInput = customTemplateInput
+
+		if process == constant.CreateEntity {
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Entity.Dir, name, extention)
+			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "entity")
+
+			if strings.Contains(customTemplateInput, "time.Time") {
+				customTemplateInput = `
+				import (
+					"time"
+    				xsvalidator "` + os.Getenv(constant.THORPACKAGE) + `/internal/pkg/validator"
+				) 
+
+				//` + structName + ` ....
+				` + customTemplateInput
+			} else {
+				customTemplateInput = `
+				import (
+    				xsvalidator "` + os.Getenv(constant.THORPACKAGE) + `/internal/pkg/validator"
+				) 
+
+				//` + structName + ` ....
+				` + customTemplateInput
+			}
+
+			customTemplateInput = strings.Replace(customTemplateInput, "Id", "ID", -1)
+
+		} else if process == constant.CreateUseCase {
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Usecase.Dir, name, extention)
+			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "usecase")
+		} else if process == constant.CreateStore {
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir, name, extention)
+			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "store")
+		} else if process == constant.CreateStoreImpl {
+			os.Mkdir(fmt.Sprintf("%v", s.ProjectStructure.Store.Dir+"/postgres/"), 0700)
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir+"/postgres/", name, extention)
+			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "implementation_store_pg")
 		}
 
-		structTemplate = strings.Replace(structTemplate, "Id", "ID", -1)
-
-		structName = strings.Replace(structName, "Id", "ID", -1)
 	}
 
 	// detect if file exists
 	var _, err = os.Stat(destinationFilename)
-	log.Info("will be create file in directory ...", destinationFilename)
+	log.Info("will be create file in directory : ", destinationFilename)
 
 	// create file if not exists
 	if os.IsNotExist(err) {
@@ -197,22 +265,24 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			return err
 		}
 
+		ReqTemplateInput = strings.Replace(ReqTemplateInput, "type ", "type Request", -1)
+
 		data := struct {
-			Key             string
-			KeyLowerCase    string
-			StructName      string
-			StructNameLower string
-			StructTemplate  string
-			TableName       string
-			Dependencies    string
+			Key                     string
+			KeyLowerCase            string
+			CustomTemplateFromInput string
+			Name                    string
+			Package                 string
+			ReqTemplate             string
+			TableName               string
 		}{
-			Key:             strings.Title(name),
-			KeyLowerCase:    strings.ToLower(name),
-			StructName:      structName,
-			StructNameLower: strings.ToLower(structName),
-			StructTemplate:  structTemplate,
-			TableName:       tableName,
-			Dependencies:    dep,
+			Key:                     strings.Title(name),
+			KeyLowerCase:            strings.ToLower(name),
+			CustomTemplateFromInput: customTemplateInput,
+			Name:        structName,
+			Package:     os.Getenv(constant.THORPACKAGE),
+			ReqTemplate: ReqTemplateInput,
+			TableName:   ToSnakeCase(tableName),
 		}
 
 		var tpl bytes.Buffer
@@ -224,9 +294,12 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 
 		tplStr := tpl.String()
 		io.WriteFile(destinationFilename, tplStr)
+	} else {
+		log.Warning("File already exist")
+		return nil
 	}
 
-	log.Info("done creating file ")
+	log.Info("done creating file ", destinationFilename)
 
 	cmd := exec.Command("gofmt", "-l", "-w", destinationFilename)
 
@@ -238,7 +311,15 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 		log.Error("========================================================")
 	}
 
-	log.Info("Formatting file done ...")
-
+	log.Info("Go fmt file done ...")
 	return nil
+}
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func ToSnakeCase(str string) string {
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }

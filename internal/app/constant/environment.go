@@ -5,4 +5,6 @@ const (
 	DIR = "GANDIR"
 	// CONNDB ...
 	CONNDB = "GANCONN"
+	// THORPACKAGE ...
+	THORPACKAGE = "THORPACKAGE"
 )

@@ -21,4 +21,6 @@ const (
 	ReverseForSeed = "reverse_for_seed"
 	// CreateApp ...
 	CreateApp = "create_app"
+	// ReverseDB ...
+	ReverseDB = "reverse_db"
 )
