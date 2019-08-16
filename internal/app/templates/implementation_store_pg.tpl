@@ -1,4 +1,4 @@
-package postgres
+package store
 
 import (
 	"strings"
@@ -26,7 +26,7 @@ func (s *{{.KeyLowerCase}}Store) Update(
 	val interface{}, 
 	valuesToUpdate map[string]interface{},
 ) error {
-	query := "UPDATE {{.KeyLowerCase}} SET "
+	query := "UPDATE {{.TableName}} SET "
 	vals := make([]interface{}, 0)
 	queryField := make([]string, 0)
 

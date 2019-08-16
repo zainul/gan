@@ -62,11 +62,13 @@ func (s *store) GetEntityWithoutTableName() ([]StructWithTablenName, error) {
 	for rows.Next() {
 		var tmpl string
 		var tableName string
-		rows.Scan(&tmpl, &tableName)
+		var structName string
+		rows.Scan(&tmpl, &tableName, &structName)
 
 		strc := StructWithTablenName{
-			Models:    tmpl,
-			TableName: tableName,
+			Models:     tmpl,
+			TableName:  tableName,
+			StructName: structName,
 		}
 		structs = append(structs, strc)
 	}

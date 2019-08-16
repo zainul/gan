@@ -221,17 +221,12 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 				customTemplateInput = `
 				import (
 					"time"
-    				xsvalidator "` + os.Getenv(constant.THORPACKAGE) + `/internal/pkg/validator"
 				) 
 
 				//` + structName + ` ....
 				` + customTemplateInput
 			} else {
 				customTemplateInput = `
-				import (
-    				xsvalidator "` + os.Getenv(constant.THORPACKAGE) + `/internal/pkg/validator"
-				) 
-
 				//` + structName + ` ....
 				` + customTemplateInput
 			}
@@ -245,8 +240,8 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir, name, extention)
 			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "store")
 		} else if process == constant.CreateStoreImpl {
-			os.Mkdir(fmt.Sprintf("%v", s.ProjectStructure.Store.Dir+"/postgres/"), 0700)
-			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir+"/postgres/", name, extention)
+			os.Mkdir(fmt.Sprintf("%v", s.ProjectStructure.Store.Dir+"/store/"), 0700)
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir+"/store", name, extention)
 			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "implementation_store_pg")
 		}
 
