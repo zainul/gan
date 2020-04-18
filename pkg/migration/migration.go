@@ -2,9 +2,9 @@ package migration
 
 import (
 	"github.com/zainul/gan/internal/app"
-	"github.com/zainul/gan/internal/app/constant"
-	"github.com/zainul/gan/internal/app/io"
-	"github.com/zainul/gan/internal/app/log"
+	"github.com/zainul/gan/internal/constant"
+	"github.com/zainul/gan/internal/io"
+	"github.com/zainul/gan/internal/log"
 )
 
 const (

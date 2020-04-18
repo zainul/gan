@@ -2,29 +2,24 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"os"
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/urfave/cli"
-	"github.com/zainul/gan/internal/app"
-	"github.com/zainul/gan/internal/app/constant"
-	"github.com/zainul/gan/internal/app/database"
-	"github.com/zainul/gan/internal/app/io"
-	"github.com/zainul/gan/internal/app/log"
-)
 
-// Config ...
-type Config struct {
-	Dir              string                `json:"dir"`
-	Conn             string                `json:"conn"`
-	SeedDir          string                `json:"seed_dir"`
-	ProjectPackage   string                `json:"project_package"`
-	ProjectStructure *app.ProjectStructure `json:"project_structure"`
-}
+	"github.com/zainul/gan/internal/app"
+	app_creator "github.com/zainul/gan/internal/app-creator"
+	"github.com/zainul/gan/internal/constant"
+	"github.com/zainul/gan/internal/database"
+	"github.com/zainul/gan/internal/entity"
+	"github.com/zainul/gan/internal/io"
+	"github.com/zainul/gan/internal/log"
+)
 
 func completer(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
@@ -41,7 +36,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 }
 
 func completerEmpty(d prompt.Document) []prompt.Suggest {
-	s := []prompt.Suggest{}
+	s := make([]prompt.Suggest, 0)
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
@@ -53,7 +48,7 @@ func completerConfig(d prompt.Document) []prompt.Suggest {
 }
 
 func completerConfigCreateApp(d prompt.Document) []prompt.Suggest {
-	s := []prompt.Suggest{}
+	s := make([]prompt.Suggest, 0)
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
@@ -89,8 +84,12 @@ ______ _______ __   _
 			Name:  constant.Migrate,
 			Usage: "Migrate migrations script",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
-				migrate(cfg)
+				if cfg, err := io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				} else {
+					mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+					mig.Migrate(constant.StatusUp)
+				}
 				return nil
 			},
 		},
@@ -98,8 +97,12 @@ ______ _______ __   _
 			Name:  constant.Seed,
 			Usage: "Seed the data from file",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
-				seedDataFromFile(cfg)
+				if cfg, err := io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				} else {
+					mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+					mig.Seed()
+				}
 				return nil
 			},
 		},
@@ -107,8 +110,11 @@ ______ _______ __   _
 			Name:  constant.ReverseForSeed,
 			Usage: "Reverse table to struct and the added to seeder package",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
-				reverseSeed(cfg)
+				if cfg, err := io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				} else {
+					reverseSeed(cfg)
+				}
 				return nil
 			},
 		},
@@ -116,7 +122,11 @@ ______ _______ __   _
 			Name:  constant.CreateSeed,
 			Usage: "Create seed template file",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
+				var cfg entity.Config
+				var err error
+				if cfg, err = io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				}
 
 				if c.Args().First() == "" {
 					log.Error("Please provide 1st argument")
@@ -130,12 +140,28 @@ ______ _______ __   _
 			Name:  constant.CreateFromFile,
 			Usage: "Create migration from SQL file",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
+				var cfg entity.Config
+				var err error
+				if cfg, err = io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				}
+
 				if c.Args().First() == "" {
 					log.Error("Please provide 1st argument")
 					return errors.New("argument not completed")
 				}
-				migrationSQLFromFile(cfg, c.Args().First())
+
+				mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+				_ = mig.CreateFile(
+					fmt.Sprintf("%v_%v_%v",
+						c.Args().First(),
+						time.Now().Format("20060102_150405"),
+						time.Now().UnixNano(),
+					),
+					constant.DotGo,
+					constant.FileTypeMigrationFromFile,
+				)
+				log.Info("completed task: ", c.Args().First())
 				return nil
 			},
 		},
@@ -143,12 +169,19 @@ ______ _______ __   _
 			Name:  constant.Create,
 			Usage: "Create migration file",
 			Action: func(c *cli.Context) error {
-				cfg := openFile(config)
+				var cfg entity.Config
+				var err error
+				if cfg, err = io.OpenConfigFile(config); err != nil {
+					log.Error(fmt.Sprintf("Error opening file %+v", err))
+				}
+
 				if c.Args().First() == "" {
 					log.Error("Please provide 1st argument")
 					return errors.New("argument not completed")
 				}
+
 				migrationFile(cfg, c.Args().First())
+
 				return nil
 			},
 		},
@@ -175,24 +208,26 @@ ______ _______ __   _
 	fmt.Println("Please select action that you want")
 	t := prompt.Input("> ", completer)
 	t = strings.TrimSpace(t)
+	config = prompt.Input("Where is the config file stored ?", completerConfig)
+	var cfg entity.Config
+
+	if cfg, err = io.OpenConfigFile(config); err != nil {
+		log.Error(fmt.Sprintf("Error opening file %+v", err))
+	}
+
 	switch t {
 	case constant.Migrate:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
-		cfg := openFile(config)
-		migrate(cfg)
+		mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+		mig.Migrate(constant.StatusUp)
 		break
 	case constant.Seed:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
-		cfg := openFile(config)
-		seedDataFromFile(cfg)
+		mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+		mig.Seed()
 		break
 	case constant.ReverseForSeed:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
-		cfg := openFile(config)
 		reverseSeed(cfg)
 		break
 	case constant.CreateSeed:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
 		var entity string
 		for {
 			entity = prompt.Input("What name for entity that you want to seed ?", completerEmpty)
@@ -200,11 +235,13 @@ ______ _______ __   _
 				break
 			}
 		}
-		cfg := openFile(config)
-		seedTemplate(cfg, entity)
+		if cfg, err := io.OpenConfigFile(config); err != nil {
+			log.Error(fmt.Sprintf("Error opening file %+v", err))
+		} else {
+			seedTemplate(cfg, entity)
+		}
 		break
 	case constant.CreateFromFile:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
 		var entity string
 		for {
 			entity = prompt.Input("What name of migration ?", completerEmpty)
@@ -212,11 +249,24 @@ ______ _______ __   _
 				break
 			}
 		}
-		cfg := openFile(config)
-		migrationSQLFromFile(cfg, entity)
+		if cfg, err := io.OpenConfigFile(config); err != nil {
+			log.Error(fmt.Sprintf("Error opening file %+v", err))
+		} else {
+			mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir)
+			mig.Migrate(constant.StatusUp)
+			mig.CreateFile(
+				fmt.Sprintf("%v_%v_%v",
+					entity,
+					time.Now().Format("20060102_150405"),
+					time.Now().UnixNano(),
+				),
+				constant.DotGo,
+				constant.FileTypeMigrationFromFile,
+			)
+		}
+
 		break
 	case constant.Create:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
 		var entity string
 		for {
 			entity = prompt.Input("What name of migration ?", completerEmpty)
@@ -224,23 +274,48 @@ ______ _______ __   _
 				break
 			}
 		}
-		cfg := openFile(config)
-		migrationFile(cfg, entity)
+		if cfg, err := io.OpenConfigFile(config); err != nil {
+			log.Error(fmt.Sprintf("Error opening file %+v", err))
+		} else {
+			migrationFile(cfg, entity)
+		}
 		break
 	case constant.CreateApp:
-		name := prompt.Input("What is your service name ? ", completerConfigCreateApp)
-		packageName := prompt.Input("What your root of your package you want ? ", completerConfigCreateApp)
-		yourPath := prompt.Input("Your GOPATH ? ", completerConfigCreateApp)
+		name := prompt.Input("What is your service name ? (ex: danisa) ", completerConfigCreateApp)
+		packageName := prompt.Input("What your root of your package you want ? (ex: github.com/zainul) ", completerConfigCreateApp)
+		yourPath := prompt.Input(fmt.Sprintf("Your GOPATH ? ex : /home/zainul/go"), completerConfigCreateApp)
 		fmt.Println("Hi , I will serve service " + name + " for you with ♥ ")
-		copyFindAndReplace(name, packageName, yourPath)
+
+		c := app_creator.Creator{
+			PackageURL:         cfg.CreatorApp.PackageURL,
+			StarterProjectName: cfg.CreatorApp.StarterProjectName,
+			StarterPackageName: cfg.CreatorApp.StarterPackageName,
+			ProjectName:        name,
+			Package:            packageName,
+			Path:               yourPath,
+		}
+
+		err := c.CopyFindAndReplace()
+
+		if err != nil {
+			log.Error("Error when creating app :( ", err)
+		}
+
 		break
 	case constant.ReverseDB:
-		config := prompt.Input("Where is the config file stored ?", completerConfig)
-		cfg := openFile(config)
+		var (
+			cfg entity.Config
+			err error
+		)
+
+		if cfg, err = io.OpenConfigFile(config); err != nil {
+			log.Error(fmt.Sprintf("Error opening file %+v", err))
+			return
+		}
 
 		mig := app.NewMigration(cfg.Dir, cfg.Conn, cfg.SeedDir, cfg.ProjectStructure, cfg.ProjectPackage)
 
-		if cfg.ProjectStructure != nil {
+		if cfg.ProjectStructure != (entity.ProjectStructure{}) {
 			conn, err := sql.Open("postgres", cfg.Conn)
 			db := database.NewDB(conn)
 			structs, err := db.GetEntityWithoutTableName()
@@ -268,35 +343,4 @@ ______ _______ __   _
 		}
 		break
 	}
-
-	if err != nil {
-		log.Error(err)
-	}
-}
-
-func openFile(config string) Config {
-	byteJSON, err := io.OpenFile(config)
-
-	if err != nil {
-		log.Error("Failed to open file ", err)
-		os.Exit(2)
-	}
-
-	cfg := Config{}
-
-	err = json.Unmarshal(byteJSON, &cfg)
-
-	if err != nil {
-		log.Error(err)
-		os.Exit(2)
-	}
-
-	if cfg.Dir == "" || cfg.Conn == "" {
-		log.Error("Must set config first")
-		os.Exit(2)
-	}
-
-	log.Warning("Config ", cfg.Conn)
-	log.Warning("Directory ", cfg.Dir)
-	return cfg
 }
