@@ -1,0 +1,26 @@
+{
+    "dir":"dir",
+    "conn":"conn",
+    "seed_dir":"seed",
+    "project_package": "project_package",
+    "project_structure": {
+        "entity": {
+                "dir": "dir",
+                "template": "template"
+        },
+        "repository": {
+                "dir": "dir",
+                "template": "template"
+        },
+        "use_case": {
+                "dir": "dir",
+                "template": "template"
+        }
+    },
+    "creator_app_info" : {
+        "package_url": "",
+        "starter_name": "",
+        "starter_package": ""
+    }
+
+}

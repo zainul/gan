@@ -1,0 +1,5 @@
+{
+    "dir":"/home/nakama/work/app/workspace/src/github.com/zainul/gan/examples",
+    "conn":"user=postgres password=*** dbname=name host=localhost port=5432 sslmode=disable",
+    "seed_dir":"/home/nakama/work/app/workspace/src/github.com/zainul/gan/examples/seed"
+}

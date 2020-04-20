@@ -9,10 +9,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/zainul/gan/internal/app/io"
-	"github.com/zainul/gan/internal/app/log"
-
-	"github.com/zainul/gan/internal/app/constant"
+	"github.com/zainul/gan/internal/constant"
+	"github.com/zainul/gan/internal/entity"
+	"github.com/zainul/gan/internal/io"
+	"github.com/zainul/gan/internal/log"
 )
 
 // Migration is type for creating thing that related with migration database
@@ -22,18 +22,6 @@ type MigrationCommand interface {
 	Seed()
 }
 
-// ProjectStructure ...
-type ProjectStructure struct {
-	Entity  Item `json:"entity"`
-	Store   Item `json:"repository"`
-	Usecase Item `json:"usecase"`
-}
-
-// Item ...
-type Item struct {
-	Dir      string `json:"dir"`
-	Template string `json:"template"`
-}
 
 type storeMigration struct {
 	// dir is directory for migrations file will be placed
@@ -42,7 +30,7 @@ type storeMigration struct {
 	Conn string `json:"conn"`
 	// seedDir  is directory for seed file will be placed
 	SeedDir          string            `json:"seed_dir"`
-	ProjectStructure *ProjectStructure `json:"project_structure"`
+	ProjectStructure *entity.ProjectStructure `json:"project_structure"`
 
 	ProjectPackage string `json:"project_package"`
 }
@@ -52,12 +40,12 @@ func NewMigration(dir string, conn string, seedDir string, projectStructere ...i
 	os.Setenv(constant.CONNDB, conn)
 	os.Setenv(constant.DIR, dir)
 
-	var pj *ProjectStructure
+	var pj *entity.ProjectStructure
 	var pk string
 
 	if projectStructere != nil && len(projectStructere) > 0 {
 		item := projectStructere[0]
-		pj = item.(*ProjectStructure)
+		pj = item.(*entity.ProjectStructure)
 	}
 
 	if len(projectStructere) > 1 {
@@ -234,7 +222,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			customTemplateInput = strings.Replace(customTemplateInput, "Id", "ID", -1)
 
 		} else if process == constant.CreateUseCase {
-			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Usecase.Dir, name, extention)
+			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.UseCase.Dir, name, extention)
 			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "usecase")
 		} else if process == constant.CreateStore {
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir, name, extention)
@@ -274,10 +262,10 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 			Key:                     strings.Title(name),
 			KeyLowerCase:            strings.ToLower(name),
 			CustomTemplateFromInput: customTemplateInput,
-			Name:        structName,
-			Package:     os.Getenv(constant.THORPACKAGE),
-			ReqTemplate: ReqTemplateInput,
-			TableName:   ToSnakeCase(tableName),
+			Name:                    structName,
+			Package:                 os.Getenv(constant.THORPACKAGE),
+			ReqTemplate:             ReqTemplateInput,
+			TableName:               ToSnakeCase(tableName),
 		}
 
 		var tpl bytes.Buffer

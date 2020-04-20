@@ -5,8 +5,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/zainul/gan/internal/app"
-	"github.com/zainul/gan/internal/app/constant"
-	"github.com/zainul/gan/internal/app/log"
+	"github.com/zainul/gan/internal/constant"
+	"github.com/zainul/gan/internal/log"
 )
 
 type Store interface {

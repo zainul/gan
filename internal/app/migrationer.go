@@ -12,13 +12,14 @@ import (
 	"os"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
-	"github.com/zainul/gan/internal/app/constant"
-	"github.com/zainul/gan/internal/app/database"
-	"github.com/zainul/gan/internal/app/io"
-	"github.com/zainul/gan/internal/app/log"
-
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/lib/pq"
+
+	"github.com/zainul/gan/internal/constant"
+	"github.com/zainul/gan/internal/database"
+	"github.com/zainul/gan/internal/io"
+	"github.com/zainul/gan/internal/log"
+
 )
 
 // Migration ...
