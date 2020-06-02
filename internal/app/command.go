@@ -182,7 +182,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 
 	AppPath := fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), constant.PathAppName)
 
-	sourceFilename := fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, fileType)
+	sourceFilename := fmt.Sprintf("%v/internal/templates/%v.tpl", AppPath, fileType)
 
 	destinationFilename := fmt.Sprintf("%v/%v.%v", s.Dir, name, extention)
 
@@ -203,7 +203,7 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 
 		if process == constant.CreateEntity {
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Entity.Dir, name, extention)
-			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "entity")
+			sourceFilename = fmt.Sprintf("%v/internal/templates/%v.tpl", AppPath, "entity")
 
 			if strings.Contains(customTemplateInput, "time.Time") {
 				customTemplateInput = `
@@ -223,14 +223,14 @@ func (s *storeMigration) CreateFile(name string, extention string, fileType stri
 
 		} else if process == constant.CreateUseCase {
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.UseCase.Dir, name, extention)
-			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "usecase")
+			sourceFilename = fmt.Sprintf("%v/internal/templates/%v.tpl", AppPath, "usecase")
 		} else if process == constant.CreateStore {
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir, name, extention)
-			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "store")
+			sourceFilename = fmt.Sprintf("%v/internal/templates/%v.tpl", AppPath, "store")
 		} else if process == constant.CreateStoreImpl {
 			os.Mkdir(fmt.Sprintf("%v", s.ProjectStructure.Store.Dir+"/store/"), 0700)
 			destinationFilename = fmt.Sprintf("%v/%v.%v", s.ProjectStructure.Store.Dir+"/store", name, extention)
-			sourceFilename = fmt.Sprintf("%v/internal/app/templates/%v.tpl", AppPath, "implementation_store_pg")
+			sourceFilename = fmt.Sprintf("%v/internal/templates/%v.tpl", AppPath, "implementation_store_pg")
 		}
 
 	}
